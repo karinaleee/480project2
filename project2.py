@@ -136,7 +136,7 @@ class Node: #structure for MCT
 
     def count_ofcards(self):
         if self.stage == PRE_FLOP:
-            return 2   # opponent card
+            return 2   # opponent card - randomized to start with 
         if self.stage == PRE_OPP:
             return 3   # flop community 
         if self.stage == PRE_FLOP_BOARD:
@@ -204,9 +204,9 @@ class Node: #structure for MCT
             return None
 
         child_deck = self.deck.copy_deck()  #copy and remove the unneeded 
-        for c in content:
-            if c in child_deck.deck:
-                child_deck.deck.remove(c)
+        for card in content:
+            if card in child_deck.deck:
+                child_deck.deck.remove(card)
 
         if self.stage == PRE_FLOP: #create child node
             child_world = content              # opp
