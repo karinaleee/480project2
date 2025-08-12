@@ -24,7 +24,7 @@ class Deck:
     def __init__(self, deck=None): #starts deck
         self.deck = list(deck) if deck else make_deck()
 
-    def draw_cards(self, n):#draws random cards from the deck 
+    def draw_cards(self, n):#draws random cards from the deck to start game
         drawn = random.sample(self.deck, n)
         for card in drawn:
             self.deck.remove(card)
@@ -49,7 +49,7 @@ def evaluate(total_cards: List[str]):
     suit_card = Counter(suits)
     flush_suit = None
     for suit, cnt in suit_card.items():
-        if cnt >= 5: #same suit 5+ times
+        if cnt >= 5: #same suit 5+ times is flush 
             flush_suit = suit
             break
 
@@ -126,7 +126,7 @@ class Node: #structure for MCT
         self.world = list(world)
         self.stage = stage
         self.children: List["Node"] = []
-        self.visited: List[List[str]] = []  # list of tried child
+        self.visited: List[List[str]] = []  #list of tried child
         self.max_children = max_children
         self.wins = 0.0
         self.sim = 0
@@ -136,13 +136,13 @@ class Node: #structure for MCT
 
     def count_ofcards(self):
         if self.stage == PRE_FLOP:
-            return 2   # opponent card - randomized to start with 
+            return 2   #opponent card - randomized to start with 
         if self.stage == PRE_OPP:
-            return 3   # flop community 
+            return 3   #flop community 
         if self.stage == PRE_FLOP_BOARD:
-            return 1   # turn community 
+            return 1   #turn community 
         if self.stage == PRE_TURN:
-            return 1   # river community 
+            return 1   #river community 
         return 0
 
     def child_stage(self): #next stage
@@ -189,7 +189,7 @@ class Node: #structure for MCT
 
         remain = self.remaining_cards(hand)
         need = self.count_ofcards()
-        for _ in range(3000):
+        for _ in range(3000): #wanted a big sample size for attempts
             pick = sorted(random.sample(remain, need))
             if pick not in self.visited:
                 self.visited.append(pick)
@@ -208,7 +208,7 @@ class Node: #structure for MCT
             if card in child_deck.deck:
                 child_deck.deck.remove(card)
 
-        if self.stage == PRE_FLOP: #create child node
+        if self.stage == PRE_FLOP: #sstarts with preflop with 2 cards
             child_world = content              # opp
         elif self.stage == PRE_OPP:
             child_world = content              # flop
@@ -276,7 +276,7 @@ def mcts(root: Node, hand: List[str], c: float = UCB1_C, max_sims: int = 10000):
 
         #selection 
         while not node.is_terminal():
-            # only expand if there is space 
+            # only expand if there is space and not past 1000 
             can_expand = (len(node.visited) <
                           min(node.max_children, node.children_atNode(hand)))
             if can_expand: #add child if can 
@@ -293,14 +293,10 @@ def mcts(root: Node, hand: List[str], c: float = UCB1_C, max_sims: int = 10000):
             path.append(node)
 
        #simulation 
-        if node.is_terminal():
-            opp = recon_opponent(node, hand)
-            board = recon_board(node)
-            result = compare_cards(hand + board, opp + board)
-        else:
-            result = rollout_from(node, hand)
-
-    
+        result = (compare_cards(hand + recon_board(node),
+                            recon_opponent(node, hand) + recon_board(node))
+                  if node.is_terminal() else
+                  rollout_from(node, hand))
 
        # back propagation (keeping track)
         for nd in path:
